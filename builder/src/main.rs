@@ -23,6 +23,26 @@ fn run_lua(code: &str) -> String{
     lua.load(code).eval::<String>().unwrap_or("lua code errored".to_string())
 }
 
+fn run_macro(file_path:&str,args:&str)->String{
+
+    if !Path::new(file_path).exists() {
+        println!("target macro file {file_path} does not exist");
+        exit(-1);
+    }
+    let mut file = File::open(file_path).unwrap();
+    let mut code = String::new();
+    file.read_to_string(&mut code).unwrap();
+
+
+    let lua = Lua::new();
+    let globals = lua.globals();
+    globals.set("args", args).unwrap();
+    lua.load(code).exec().unwrap();
+    globals.get::<_, String>("output").unwrap_or("error in loaded lua code : not output varible defined".into())
+
+
+}
+
 fn get_json(settings_file: &str, setting: &str) -> String {
     if !Path::new(settings_file).exists() {
         println!("settings file {settings_file} does not exist");
@@ -62,6 +82,7 @@ fn render(target: &str, files: Vec<&str>) -> String {
     let base64s = Regex::new(r"<base64>(.*)</base64>").unwrap();
     let systems = Regex::new(r"<system>(.*)</system>").unwrap();
     let luas     = Regex::new(r"<lua>(.*)</lua>").unwrap();
+    let macros  = Regex::new(r"<macro>(.*)</macro>").unwrap();
 
 
     let mut target_text = fs::read_to_string(target).unwrap();
@@ -123,6 +144,19 @@ fn render(target: &str, files: Vec<&str>) -> String {
     let code = &lua.1[0];
     let include_text = run_lua(code);
     target_text = target_text.replace(found, &include_text);
+}
+
+for mac in macros
+.captures_iter(target_text.clone().as_str())
+.map(|c| c.extract::<1>())
+{
+    let found = mac.0;
+    let set = &mac.1[0];
+    let sep = set.split(":").collect::<Vec<&str>>();
+    let file_name = sep[0];
+    let macro_args = sep[1];
+let include_text = run_macro(file_name,macro_args);
+target_text = target_text.replace(found, &include_text);
 }
     
     target_text
