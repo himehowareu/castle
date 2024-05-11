@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
+use mlua::Lua;
 use regex::Regex;
 use shell_words;
 use std::fs::File;
@@ -12,8 +13,14 @@ use std::{
 fn run(command: &str) -> String {
     let a = shell_words::split(command);
     let mut b = a.unwrap();
-    let output = Command::new(b.remove(0)).args(b).output().unwrap();
+    let e = Command::new("echo").arg("error with command").output().unwrap();
+    let output = Command::new(b.remove(0)).args(b).output().unwrap_or(e);
     String::from_utf8_lossy(&output.stdout).to_string()
+}
+
+fn run_lua(code: &str) -> String{
+    let lua = Lua::new();
+    lua.load(code).eval::<String>().unwrap_or("lua code errored".to_string())
 }
 
 fn get_json(settings_file: &str, setting: &str) -> String {
@@ -54,6 +61,8 @@ fn render(target: &str, files: Vec<&str>) -> String {
     let settings = Regex::new(r"<setting>(.*)</setting>").unwrap();
     let base64s = Regex::new(r"<base64>(.*)</base64>").unwrap();
     let systems = Regex::new(r"<system>(.*)</system>").unwrap();
+    let luas     = Regex::new(r"<lua>(.*)</lua>").unwrap();
+
 
     let mut target_text = fs::read_to_string(target).unwrap();
     for include in includes
@@ -106,6 +115,16 @@ fn render(target: &str, files: Vec<&str>) -> String {
         target_text = target_text.replace(found, &include_text);
     }
 
+    for lua in luas
+    .captures_iter(target_text.clone().as_str())
+    .map(|c| c.extract::<1>())
+{
+    let found = lua.0;
+    let code = &lua.1[0];
+    let include_text = run_lua(code);
+    target_text = target_text.replace(found, &include_text);
+}
+    
     target_text
 }
 
