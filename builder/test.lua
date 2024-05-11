@@ -1,1 +1,2 @@
-output = args
+
+output = args .. " hi"
