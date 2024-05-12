@@ -12,33 +12,29 @@ use std::{
 use tera::Context;
 use tera::Tera;
 
-
 fn run(command: &str) -> String {
-    
     let a = shell_words::split(command);
     let mut b = a.unwrap();
     let mut out;
-    if env::consts::OS == "windows"{
-
-    let e = Command::new("cmd")
-        .args(["/c", "echo","error with command"])
-        .output()
-        .unwrap();
-    let output = Command::new("cmd").arg("/c").args(b).output().unwrap_or(e);
-    out = String::from_utf8_lossy(&output.stdout).to_string();
-    if out.len()<1{
-        out = String::from_utf8_lossy(&output.stderr).to_string();        
-    }
-    }else{
-
-    let e = Command::new("echo")
-        .arg("error with command")
-        .output()
-        .unwrap();
+    if env::consts::OS == "windows" {
+        let e = Command::new("cmd")
+            .args(["/c", "echo", "error with command"])
+            .output()
+            .unwrap();
+        let output = Command::new("cmd").arg("/c").args(b).output().unwrap_or(e);
+        out = String::from_utf8_lossy(&output.stdout).to_string();
+        if out.len() < 1 {
+            out = String::from_utf8_lossy(&output.stderr).to_string();
+        }
+    } else {
+        let e = Command::new("echo")
+            .arg("error with command")
+            .output()
+            .unwrap();
         let output = Command::new(b.remove(0)).args(b).output().unwrap_or(e);
         out = String::from_utf8_lossy(&output.stdout).to_string();
-        if out.len()<1{
-            out = String::from_utf8_lossy(&output.stderr).to_string();        
+        if out.len() < 1 {
+            out = String::from_utf8_lossy(&output.stderr).to_string();
         }
     }
     out
@@ -51,14 +47,20 @@ fn run_lua(code: &str) -> String {
         .unwrap_or("lua code errored".to_string())
 }
 
-fn run_macro(file_path: &str, args: &str) -> String {
+fn try_read_file(file_path: &str)->String{
     if !Path::new(file_path).exists() {
-        println!("target macro file {file_path} does not exist");
+        println!("target file {file_path} does not exist");
         exit(-1);
+    }else{
+        let mut file = File::open(file_path).unwrap();
+        let mut code = String::new();
+        file.read_to_string(&mut code).unwrap();
+        code
     }
-    let mut file = File::open(file_path).unwrap();
-    let mut code = String::new();
-    file.read_to_string(&mut code).unwrap();
+}
+
+fn run_macro(file_path: &str, args: &str) -> String {
+    let code = try_read_file(file_path);
 
     let lua = Lua::new();
     let globals = lua.globals();
@@ -70,25 +72,18 @@ fn run_macro(file_path: &str, args: &str) -> String {
 }
 
 fn get_json(settings_file: &str, setting: &str) -> String {
-    if !Path::new(settings_file).exists() {
-        println!("settings file {settings_file} does not exist");
-        exit(-1);
-    }
+    _ = try_read_file(settings_file);
+
     let file = fs::File::open(settings_file).expect("file should open read only");
     let json: serde_json::Value =
         serde_json::from_reader(file).expect("file should be proper JSON");
     let first_name = json.get(setting).unwrap();
+
     first_name.to_string()
 }
 
 fn file_to_base64(file_path: &str) -> String {
-    if !Path::new(file_path).exists() {
-        println!("target base64 file {file_path} does not exist");
-        exit(-1);
-    }
-    let mut file = File::open(file_path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    let contents = try_read_file(file_path);
     let encoded = general_purpose::STANDARD.encode(contents);
     encoded
 }
@@ -98,29 +93,22 @@ fn minify(test: String) -> String {
 }
 
 fn run_blueprint(file_path: &str, args: &str) -> String {
-    if !Path::new(file_path).exists() {
-        println!("target base64 file {file_path} does not exist");
-        exit(-1);
-    }
-    let mut file = File::open(file_path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    let contents = try_read_file(file_path);
 
     let mut context = Context::new();
     for arg in shell_words::split(args).unwrap() {
         let sep = arg.split("=").collect::<Vec<&str>>();
         context.insert(sep[0], sep[1])
     }
+
     let result = Tera::one_off(contents.as_str(), &context, true);
+
     result.unwrap_or("error in temple".to_string())
 }
 
 fn render(target: &str, files: Vec<&str>) -> String {
-    if !Path::new(target).exists() {
-        println!("target file {target} does not exist");
-        exit(-1);
-    }
-
+    let mut target_text  = try_read_file(target);
+    
     let includes = Regex::new(r"<include>(.*)</include>").unwrap();
     let settings = Regex::new(r"<setting>(.*)</setting>").unwrap();
     let base64s = Regex::new(r"<base64>(.*)</base64>").unwrap();
@@ -129,7 +117,6 @@ fn render(target: &str, files: Vec<&str>) -> String {
     let macros = Regex::new(r"<macro>(.*)</macro>").unwrap();
     let blueprints = Regex::new(r"<blueprint>(.*)</blueprint>").unwrap();
 
-    let mut target_text = fs::read_to_string(target).unwrap();
     for include in includes
         .captures_iter(target_text.clone().as_str())
         .map(|c| c.extract::<1>())
