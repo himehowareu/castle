@@ -12,15 +12,36 @@ use std::{
 use tera::Context;
 use tera::Tera;
 
+
 fn run(command: &str) -> String {
+    
     let a = shell_words::split(command);
     let mut b = a.unwrap();
+    let mut out;
+    if env::consts::OS == "windows"{
+
+    let e = Command::new("cmd")
+        .args(["/c", "echo","error with command"])
+        .output()
+        .unwrap();
+    let output = Command::new("cmd").arg("/c").args(b).output().unwrap_or(e);
+    out = String::from_utf8_lossy(&output.stdout).to_string();
+    if out.len()<1{
+        out = String::from_utf8_lossy(&output.stderr).to_string();        
+    }
+    }else{
+
     let e = Command::new("echo")
         .arg("error with command")
         .output()
         .unwrap();
-    let output = Command::new(b.remove(0)).args(b).output().unwrap_or(e);
-    String::from_utf8_lossy(&output.stdout).to_string()
+        let output = Command::new(b.remove(0)).args(b).output().unwrap_or(e);
+        out = String::from_utf8_lossy(&output.stdout).to_string();
+        if out.len()<1{
+            out = String::from_utf8_lossy(&output.stderr).to_string();        
+        }
+    }
+    out
 }
 
 fn run_lua(code: &str) -> String {
