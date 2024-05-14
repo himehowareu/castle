@@ -5,7 +5,7 @@ use shell_words;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::{
-    env, fs,
+    env,
     path::Path,
     process::{exit, Command},
 };
@@ -13,7 +13,7 @@ use tera::Context;
 use tera::Tera;
 extern crate clap;
 
-fn run(command: &str) -> String {
+fn run(_: &str, command: &&str) -> String {
     let a = shell_words::split(command);
     let mut b = a.unwrap();
     let mut out;
@@ -38,7 +38,7 @@ fn run(command: &str) -> String {
             out = String::from_utf8_lossy(&output.stderr).to_string();
         }
     }
-    out
+    rem_last(out)
 }
 
 fn run_lua(code: &str) -> String {
@@ -74,7 +74,7 @@ fn run_macro(file_path: &str, args: &str) -> String {
 
 fn get_json(settings_file: &str, setting: &str) -> String {
     let content = try_read_file(settings_file);
-    
+
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
     let first_name = json.get(setting).unwrap();
 
@@ -103,6 +103,20 @@ fn run_blueprint(file_path: &str, args: &str) -> String {
     let result = Tera::one_off(contents.as_str(), &context, true);
 
     result.unwrap_or("error in temple".to_string())
+}
+
+fn render_with(text: String, select: Regex, renderer:fn(&str, &&str) -> String) -> String {
+    let mut target_text = text.clone();
+    for selected in select
+        .captures_iter(target_text.clone().as_str())
+        .map(|c| c.extract::<1>())
+    {
+        let found = selected.0;
+        let command = &selected.1[0];
+        let include_text = renderer(found, &command);
+        target_text = target_text.replace(found, &include_text);
+    }
+    target_text
 }
 
 fn render(target: &str, files: Vec<&str>) -> String {
@@ -156,15 +170,17 @@ fn render(target: &str, files: Vec<&str>) -> String {
         target_text = target_text.replace(found, &include_text);
     }
 
-    for system in systems
-        .captures_iter(target_text.clone().as_str())
-        .map(|c| c.extract::<1>())
-    {
-        let found = system.0;
-        let command = &system.1[0];
-        let include_text = rem_last(run(command));
-        target_text = target_text.replace(found, &include_text);
-    }
+    // for system in systems
+    //     .captures_iter(target_text.clone().as_str())
+    //     .map(|c| c.extract::<1>())
+    // {
+    //     let found = system.0;
+    //     let command = &system.1[0];
+    //     let include_text = rem_last(run(command));
+    //     target_text = target_text.replace(found, &include_text);
+    // }
+
+    target_text = render_with(target_text, systems, run);
 
     for lua in luas
         .captures_iter(target_text.clone().as_str())
@@ -217,7 +233,7 @@ fn rem_last(value: String) -> String {
 use clap::{command, Parser};
 
 #[derive(Parser)]
-#[command(author, version, about)]//, long_about = None)]
+#[command(author, version, about)] //, long_about = None)]
 struct Args {
     #[arg()]
     pub path: String,
