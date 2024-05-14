@@ -3,7 +3,7 @@ use mlua::Lua;
 use regex::Regex;
 use shell_words;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::{
     env, fs,
     path::Path,
@@ -11,6 +11,7 @@ use std::{
 };
 use tera::Context;
 use tera::Tera;
+extern crate clap;
 
 fn run(command: &str) -> String {
     let a = shell_words::split(command);
@@ -47,11 +48,11 @@ fn run_lua(code: &str) -> String {
         .unwrap_or("lua code errored".to_string())
 }
 
-fn try_read_file(file_path: &str)->String{
+fn try_read_file(file_path: &str) -> String {
     if !Path::new(file_path).exists() {
         println!("target file {file_path} does not exist");
         exit(-1);
-    }else{
+    } else {
         let mut file = File::open(file_path).unwrap();
         let mut code = String::new();
         file.read_to_string(&mut code).unwrap();
@@ -107,8 +108,8 @@ fn run_blueprint(file_path: &str, args: &str) -> String {
 }
 
 fn render(target: &str, files: Vec<&str>) -> String {
-    let mut target_text  = try_read_file(target);
-    
+    let mut target_text = try_read_file(target);
+
     let includes = Regex::new(r"<include>(.*)</include>").unwrap();
     let settings = Regex::new(r"<setting>(.*)</setting>").unwrap();
     let base64s = Regex::new(r"<base64>(.*)</base64>").unwrap();
@@ -215,12 +216,31 @@ fn rem_last(value: String) -> String {
     chars.as_str().to_string()
 }
 
+use clap::{command, Parser};
+
+#[derive(Parser)]
+#[command(author, version, about)]//, long_about = None)]
+struct Args {
+    #[arg()]
+    pub path: String,
+    #[arg()]
+    pub output: Option<String>,
+}
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        let target = &args[1];
-        println!("{}", render(target, [].to_vec()));
+    let args = Args::parse();
+
+    // println!("Rendering, {}!", args.path);
+    // println!("{}", render(args.path.as_str(), [].to_vec()));
+    // println!("{:?}",args.output.unwrap_or("out.txt".into()))
+    
+    let file_out = args.output.unwrap_or("out.txt".into());
+    let text = render(args.path.as_str(), [].to_vec());
+
+    if file_out == "-" {
+        println!("{}", text);
     } else {
-        println!("please pass the file you which you render as the only argument")
+        let mut file = File::create(file_out).unwrap();
+
+        let _ = file.write_all(text.as_bytes());
     }
 }
