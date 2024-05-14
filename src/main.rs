@@ -73,11 +73,9 @@ fn run_macro(file_path: &str, args: &str) -> String {
 }
 
 fn get_json(settings_file: &str, setting: &str) -> String {
-    _ = try_read_file(settings_file);
-
-    let file = fs::File::open(settings_file).expect("file should open read only");
-    let json: serde_json::Value =
-        serde_json::from_reader(file).expect("file should be proper JSON");
+    let content = try_read_file(settings_file);
+    
+    let json: serde_json::Value = serde_json::from_str(&content).unwrap();
     let first_name = json.get(setting).unwrap();
 
     first_name.to_string()
@@ -232,7 +230,7 @@ fn main() {
     // println!("Rendering, {}!", args.path);
     // println!("{}", render(args.path.as_str(), [].to_vec()));
     // println!("{:?}",args.output.unwrap_or("out.txt".into()))
-    
+
     let file_out = args.output.unwrap_or("out.txt".into());
     let text = render(args.path.as_str(), [].to_vec());
 
