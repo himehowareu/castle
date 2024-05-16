@@ -3,7 +3,7 @@
     <include>examples/README.md</include>
     a setting tag will pull a varible from a json 
     < setting > filename:var name
-    <setting>examples/plugin.json:buttonCode</setting>
+    <setting>examples/plugin.json;buttonCode</setting>
     a base64 tage dumps a base64 of the file 
     <base64>examples/build.py</base64>
     system tag dumps the output of a system command 
@@ -12,13 +12,24 @@
     this next line shouuld error 
     <system>ecsho <system>this shouls not run</system></system>
     a macro tag with run a lua script file with arguments
-    <macro>examples/test.lua: these are args 234234</macro>
+    <macro>examples/test.lua; these are args 234234</macro>
     a macro tag with run a lua script file
     <macro>examples/test.lua</macro>
     a lua tag runs lua code 
     <lua>1+2</lua>
-    <setting>examples/plugin.json:this is</setting>
+    <setting>examples/plugin.json;this is</setting>
     a blueprint tag import a tera template simular to Jinja 
-    <blueprint>examples/working.html:name=john car=red </blueprint>
+    <blueprint>examples/working.html;name=john car=red </blueprint>
     https://github.com/Keats/tera/tree/master?tab=readme-ov-file
 </body>
+
+<netinclude>https://raw.githubusercontent.com/himehowareu/tools/master/pyStrings.py</netinclude>
+<system>ls</system>
+<download>https://raw.githubusercontent.com/himehowareu/tools/master/watcher.py;watcher.py</download>
+<system>ls</system>
+<delete>watcher.py</delete>
+<system>ls</system>
+
+<git>https://github.com/himehowareu/CVM.git;cvm</git>
+
+<deletefolder>cvm</deletefolder>
