@@ -124,14 +124,15 @@ pub fn delete_folder(file_path: &str) -> String {
     format!("deleted folder {file_path}")
 }
 
-pub fn download_git(file_path: &str, args: &str) -> String {
-    let _ = Command::new("git")
-        .args(&["clone", file_path, args])
-        .output()
-        .expect("Failed to execute command");
+pub fn download_git(url: &str, folder_path: &str) -> String {
+    // let _ = Command::new("git")
+    //     .args(&["clone", file_path, args])
+    //     .output()
+    //     .expect("Failed to execute command");
 
-    // println!("git {file_path} downloaded and saved to {args} ");
-    format!("git {file_path} downloaded and saved to {args} ")
+    git2::Repository::clone(url,folder_path).unwrap();
+
+    format!("git {url} downloaded and saved to {folder_path} ")
 }
 
 pub fn run_blueprint(file_path: &str, args: &str) -> String {
