@@ -4,9 +4,6 @@ use std::io::Write;
 extern crate clap;
 use castle::*;
 
-// make a tag for <build> that will run a make like system
-// this will include a incermental build system along with depence resolving
-
 fn render(file_path: &str, files: Vec<&str>) -> String {
     let mut target_text = try_read_file(file_path);
     let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
