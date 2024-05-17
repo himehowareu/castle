@@ -8,10 +8,10 @@ fn render(file_path: &str, files: Vec<&str>) -> String {
     let mut target_text = try_read_file(file_path);
     let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
     for tag in tags.captures_iter(&target_text.clone()).map(|c| c.unwrap()) {
-        // let tag_target = tag.get(0).unwrap().as_str();
+        let tag_target = tag.get(0).unwrap().as_str();
         let tag_type = tag.get(1).unwrap().as_str();
         let tag_text = tag.get(2).unwrap().as_str();
-        let mut tag_value = String::new();
+        let tag_value: String;
         // println!("{tag_target}");
         match tag_type {
             "include" => {
@@ -37,9 +37,11 @@ fn render(file_path: &str, files: Vec<&str>) -> String {
             "setting" => {
                 let sep = tag_text.split(";").collect::<Vec<&str>>();
                 let file_name = sep[0];
-                let mut setting_name = "";
+                let setting_name;
                 if sep.len() > 1 {
                     setting_name = sep[1];
+                } else {
+                    setting_name = "";
                 }
                 tag_value = get_json(file_name, setting_name);
             }
@@ -73,6 +75,9 @@ fn render(file_path: &str, files: Vec<&str>) -> String {
             "netinclude" => {
                 tag_value = get_file(tag_text);
             }
+            "netimport" => {
+                tag_value = minify(get_file(tag_text));
+            }
             "download" => {
                 let sep = tag_text.split(";").collect::<Vec<&str>>();
                 let url = sep[0];
@@ -101,71 +106,21 @@ fn render(file_path: &str, files: Vec<&str>) -> String {
                     std::process::exit(-1)
                 } else {
                     let mut file = File::create(out_file).unwrap();
-                    let text = render(target_file, [out_file,file_path].to_vec());
+                    let text = render(target_file, [out_file, file_path].to_vec());
                     let _ = file.write_all(text.as_bytes());
                 }
                 tag_value = format!("rendered {target_file}")
             }
 
-            _ => println!("{}", tag.get(0).unwrap().as_str()),
+            _ => {
+                tag_value = tag_target.to_string();
+                println!("unknown tag : {}", tag_target);
+            }
         }
         target_text = tags.replace(&target_text, tag_value).to_string();
     }
     target_text
 }
-
-// fn render(target: &str, files: Vec<&str>) -> String {
-//     let mut target_text = try_read_file(target);
-
-//     let includes = Regex::new(r"<include>(.*)</include>").unwrap();
-//     let settings = Regex::new(r"<setting>(.*)</setting>").unwrap();
-//     let base64s = Regex::new(r"<base64>(.*)</base64>").unwrap();
-//     let systems = Regex::new(r"<system>(.*)</system>").unwrap();
-//     let luas = Regex::new(r"<lua>(.*)</lua>").unwrap();
-//     let macros = Regex::new(r"<macro>(.*)</macro>").unwrap();
-//     let blueprints = Regex::new(r"<blueprint>(.*)</blueprint>").unwrap();
-//     let netincludes = Regex::new(r"<netinclude>(.*)</netinclude>").unwrap();
-//     let downloads = Regex::new(r"<download>(.*)</download>").unwrap();
-//     let gits = Regex::new(r"<git>(.*)</git>").unwrap();
-//     let deletes = Regex::new(r"<delete>(.*)</delete>").unwrap();
-//     let deletefolders = Regex::new(r"<deletefolder>(.*)</deletefolder>").unwrap();
-
-//     for include in includes
-//         .captures_iter(target_text.clone().as_str())
-//         .map(|c| c.unwrap())
-//     {
-//         let found = include.0;
-//         let name = &include.1[0];
-//         if files.contains(name) {
-//             println!("while rendering {target} found recursive include {name}");
-//             exit(-1)
-//         } else {
-//             let mut files2 = files.clone();
-//             files2.push(include.0);
-//             let include_text = minify(render(name, files2));
-//             target_text = target_text.replace(found, &include_text);
-//         }
-//     }
-
-//     target_text = render_with(target_text, settings, get_json, RenderType::Complex);
-//     target_text = render_with(target_text, luas, run_lua, RenderType::Simple);
-//     target_text = render_with(target_text, base64s, file_to_base64, RenderType::Simple);
-//     target_text = render_with(target_text, macros, run_macro, RenderType::Complex);
-//     target_text = render_with(target_text, blueprints, run_blueprint, RenderType::Complex);
-//     target_text = render_with(target_text, netincludes, get_file, RenderType::Simple);
-//     target_text = render_with(target_text, downloads, download_file, RenderType::Complex);
-//     target_text = render_with(target_text, gits, download_git, RenderType::Complex);
-//     target_text = render_with(target_text, systems, run, RenderType::Simple);
-//     target_text = render_with(target_text, deletes, delete, RenderType::Simple);
-//     target_text = render_with(
-//         target_text,
-//         deletefolders,
-//         delete_folder,
-//         RenderType::Simple,
-//     );
-
-//     target_text
-// }
 
 use clap::{command, Parser};
 
