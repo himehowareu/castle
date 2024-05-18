@@ -59,6 +59,11 @@ pub fn run_lua(code: &str) -> String {
 }
 
 pub fn try_read_file(file_path: &str) -> String {
+    if file_path.starts_with("-"){
+        let mut chars = file_path.chars();
+        chars.next();
+        return chars.as_str().to_string();
+    }
     if !Path::new(file_path).exists() {
         println!("target file {file_path} does not exist");
         exit(-1);

@@ -113,11 +113,14 @@ fn render(file_path: &str, files: Vec<&str>) -> String {
             }
 
             _ => {
-                tag_value = tag_target.to_string();
-                println!("unknown tag : {}", tag_target);
+                // tag_value = tag_target.to_string();
+                tag_value = format!("<{tag_type}>{}</{tag_type}>",render(&(&("-".to_owned()+tag_text)), files.clone()));
+
+                // println!("unknown tag : {}", tag_target);
             }
         }
-        target_text = tags.replace(&target_text, tag_value).to_string();
+        // target_text = tags.replace(&target_text, tag_value).to_string();
+        target_text = target_text.replacen(tag_target, &tag_value, 1);
     }
     target_text
 }
