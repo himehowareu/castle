@@ -1,8 +1,9 @@
 use base64::{engine::general_purpose, Engine as _};
 use mlua::Lua;
+use fancy_regex::Regex;
 use shell_words;
 use std::fs::{self, File};
-use std::io::Read;
+use std::io::{Read, Write};
 use std::{
     env,
     path::Path,
@@ -17,7 +18,128 @@ pub enum RenderType {
     Complex,
 }
 
-pub fn run_command(command: &str) -> String {
+pub fn render(file_path: &str, files: Vec<&str>) -> String {
+    let mut target_text = try_read_file(file_path);
+    let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
+    for tag in tags.captures_iter(&target_text.clone()).map(|c| c.unwrap()) {
+        let tag_target = tag.get(0).unwrap().as_str();
+        let tag_type = tag.get(1).unwrap().as_str();
+        let tag_text = tag.get(2).unwrap().as_str();
+        let tag_value: String;
+        // println!("{tag_target}");
+        match tag_type {
+            "include" => {
+                if files.contains(&tag_text) {
+                    println!("while rendering {file_path} found recursive include {tag_text}");
+                    std::process::exit(-1)
+                } else {
+                    let mut files2 = files.clone();
+                    files2.push(tag_text);
+                    tag_value = render(tag_text, files2);
+                }
+            }
+            "import" => {
+                if files.contains(&tag_text) {
+                    println!("while rendering {file_path} found recursive include {tag_text}");
+                    std::process::exit(-1)
+                } else {
+                    let mut files2 = files.clone();
+                    files2.push(tag_text);
+                    tag_value = minify(render(tag_text, files2));
+                }
+            }
+            "setting" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name = sep[0];
+                let setting_name;
+                if sep.len() > 1 {
+                    setting_name = sep[1];
+                } else {
+                    setting_name = "";
+                }
+                tag_value = get_json(file_name, setting_name);
+            }
+            "base64" => {
+                tag_value = file_to_base64(tag_text);
+            }
+            "system" => {
+                tag_value = run_command(tag_text);
+            }
+            "lua" => {
+                tag_value = run_lua(tag_text);
+            }
+            "macro" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name = sep[0];
+                let mut args = "";
+                if sep.len() > 1 {
+                    args = sep[1];
+                }
+                tag_value = run_macro(file_name, args);
+            }
+            "blueprint" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name = sep[0];
+                let mut args = "";
+                if sep.len() > 1 {
+                    args = sep[1];
+                }
+                tag_value = run_blueprint(file_name, args);
+            }
+            "netinclude" => {
+                tag_value = get_file(tag_text);
+            }
+            "netimport" => {
+                tag_value = minify(get_file(tag_text));
+            }
+            "download" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let url = sep[0];
+                let file_path = sep[1];
+                tag_value = download_file(url, file_path);
+            }
+            "git" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let url = sep[0];
+                let file_path = sep[1];
+                tag_value = download_git(url, file_path);
+            }
+            "delete" => {
+                tag_value = delete(tag_text);
+            }
+            "deletefolder" => {
+                tag_value = delete_folder(tag_text);
+            }
+            "render" => {
+                let sep = tag_text.split(";").collect::<Vec<&str>>();
+                let target_file = sep[0];
+                let out_file = sep[1];
+
+                if files.contains(&target_file) {
+                    println!("while rendering {file_path} found recursive include {target_file}");
+                    std::process::exit(-1)
+                } else {
+                    let mut file = File::create(out_file).unwrap();
+                    let text = render(target_file, [out_file, file_path].to_vec());
+                    let _ = file.write_all(text.as_bytes());
+                }
+                tag_value = format!("rendered {target_file}")
+            }
+
+            _ => {
+                // tag_value = tag_target.to_string();
+                tag_value = format!("<{tag_type}>{}</{tag_type}>",render(&(&("-".to_owned()+tag_text)), files.clone()));
+
+                // println!("unknown tag : {}", tag_target);
+            }
+        }
+        // target_text = tags.replace(&target_text, tag_value).to_string();
+        target_text = target_text.replacen(tag_target, &tag_value, 1);
+    }
+    target_text
+}
+
+fn run_command(command: &str) -> String {
     let a = shell_words::split(command);
     let mut b = a.unwrap();
     let mut out;
@@ -45,20 +167,20 @@ pub fn run_command(command: &str) -> String {
     rem_last(out)
 }
 
-pub fn rem_last(value: String) -> String {
+fn rem_last(value: String) -> String {
     let mut chars = value.chars();
     chars.next_back();
     chars.as_str().to_string()
 }
 
-pub fn run_lua(code: &str) -> String {
+fn run_lua(code: &str) -> String {
     let lua = Lua::new();
     lua.load(code)
         .eval::<String>()
         .unwrap_or("lua code errored".to_string())
 }
 
-pub fn try_read_file(file_path: &str) -> String {
+fn try_read_file(file_path: &str) -> String {
     if file_path.starts_with("-"){
         let mut chars = file_path.chars();
         chars.next();
@@ -75,7 +197,7 @@ pub fn try_read_file(file_path: &str) -> String {
     }
 }
 
-pub fn run_macro(file_path: &str, args: &str) -> String {
+fn run_macro(file_path: &str, args: &str) -> String {
     let code = try_read_file(file_path);
 
     let lua = Lua::new();
@@ -87,7 +209,7 @@ pub fn run_macro(file_path: &str, args: &str) -> String {
         .unwrap_or("error in loaded lua code : not output varible defined".into())
 }
 
-pub fn get_json(settings_file: &str, setting: &str) -> String {
+fn get_json(settings_file: &str, setting: &str) -> String {
     let content = try_read_file(settings_file);
 
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
@@ -96,40 +218,40 @@ pub fn get_json(settings_file: &str, setting: &str) -> String {
     first_name.to_string()
 }
 
-pub fn file_to_base64(file_path: &str) -> String {
+fn file_to_base64(file_path: &str) -> String {
     let contents = try_read_file(file_path);
     let encoded = general_purpose::STANDARD.encode(contents);
     encoded
 }
 
-pub fn minify(test: String) -> String {
+fn minify(test: String) -> String {
     test.replace("\n", "").replace("\'", "\"")
 }
 
-pub fn download_file(url: &str, file_path: &str) -> String {
+fn download_file(url: &str, file_path: &str) -> String {
     let resp = reqwest::blocking::get(url).expect("request failed");
     let body = resp.bytes().expect("body invalid");
     let _ = std::fs::write(file_path, &body);
     format!("Downloaded {file_path}")
 }
 
-pub fn get_file(url: &str) -> String {
+fn get_file(url: &str) -> String {
     let resp = reqwest::blocking::get(url.to_string()).expect("request failed");
     let body = resp.text().expect("body invalid");
     body
 }
 
-pub fn delete(file_path:&str) -> String {
+fn delete(file_path:&str) -> String {
     fs::remove_file(file_path).unwrap();
     format!("deleted file {file_path}")
 }
 
-pub fn delete_folder(file_path: &str) -> String {
+fn delete_folder(file_path: &str) -> String {
     fs::remove_dir_all(file_path).unwrap();
     format!("deleted folder {file_path}")
 }
 
-pub fn download_git(url: &str, folder_path: &str) -> String {
+fn download_git(url: &str, folder_path: &str) -> String {
     // let _ = Command::new("git")
     //     .args(&["clone", file_path, args])
     //     .output()
@@ -140,7 +262,7 @@ pub fn download_git(url: &str, folder_path: &str) -> String {
     format!("git {url} downloaded and saved to {folder_path} ")
 }
 
-pub fn run_blueprint(file_path: &str, args: &str) -> String {
+fn run_blueprint(file_path: &str, args: &str) -> String {
     let contents = try_read_file(file_path);
 
     let mut context = Context::new();
