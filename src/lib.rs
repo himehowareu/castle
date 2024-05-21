@@ -25,7 +25,6 @@ pub enum RenderType {
 pub fn render(file_path: &str, files: Vec<&str>) -> String {
     let mut target_text = try_read_file(file_path);
     let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
-    // debug(format!("{:?}", files));
     for tag in tags.captures_iter(&target_text.clone()).map(|c| c.unwrap()) {
         let tag_target = tag.get(0).unwrap().as_str();
         let tag_type = tag.get(1).unwrap().as_str();

@@ -3,7 +3,6 @@ use std::io::Write;
 
 use castle::render;
 
-
 extern crate clap;
 use clap::{command, Parser};
 
