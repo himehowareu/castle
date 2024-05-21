@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose, Engine as _};
-use mlua::Lua;
 use fancy_regex::Regex;
+use mlua::Lua;
 use shell_words;
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -18,15 +18,22 @@ pub enum RenderType {
     Complex,
 }
 
+// fn debug(text: String) {
+// println!("{text}");
+// }
+
 pub fn render(file_path: &str, files: Vec<&str>) -> String {
     let mut target_text = try_read_file(file_path);
     let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
+    // debug(format!("{:?}", files));
     for tag in tags.captures_iter(&target_text.clone()).map(|c| c.unwrap()) {
         let tag_target = tag.get(0).unwrap().as_str();
         let tag_type = tag.get(1).unwrap().as_str();
-        let tag_text = tag.get(2).unwrap().as_str();
+        let tag_text: &str = tag.get(2).unwrap().as_str();
         let tag_value: String;
-        // println!("{tag_target}");
+        // debug(format!("from : {file_path}"));
+        // debug(format!("tag Type : {tag_type}"));
+        // debug(format!("tag Text: {tag_text}"));
         match tag_type {
             "include" => {
                 if files.contains(&tag_text) {
@@ -120,15 +127,19 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                     std::process::exit(-1)
                 } else {
                     let mut file = File::create(out_file).unwrap();
-                    let text = render(target_file, [out_file, file_path].to_vec());
+                    let text = render(target_file, [target_file, file_path].to_vec());
                     let _ = file.write_all(text.as_bytes());
                 }
                 tag_value = format!("rendered {target_file}")
             }
 
             _ => {
+                // println!("{tag_target}::{tag_type}:{tag_text}");
                 // tag_value = tag_target.to_string();
-                tag_value = format!("<{tag_type}>{}</{tag_type}>",render(&(&("-".to_owned()+tag_text)), files.clone()));
+                tag_value = format!(
+                    "<{tag_type}>{}</{tag_type}>",
+                    render(&(&("-".to_owned() + tag_text)), files.clone())
+                );
 
                 // println!("unknown tag : {}", tag_target);
             }
@@ -181,7 +192,7 @@ fn run_lua(code: &str) -> String {
 }
 
 fn try_read_file(file_path: &str) -> String {
-    if file_path.starts_with("-"){
+    if file_path.starts_with("-") {
         let mut chars = file_path.chars();
         chars.next();
         return chars.as_str().to_string();
@@ -225,6 +236,7 @@ fn file_to_base64(file_path: &str) -> String {
 }
 
 fn minify(test: String) -> String {
+    // https://docs.rs/minify-html/latest/minify_html/fn.minify.html
     test.replace("\n", "").replace("\'", "\"")
 }
 
@@ -241,7 +253,7 @@ fn get_file(url: &str) -> String {
     body
 }
 
-fn delete(file_path:&str) -> String {
+fn delete(file_path: &str) -> String {
     fs::remove_file(file_path).unwrap();
     format!("deleted file {file_path}")
 }
@@ -252,12 +264,7 @@ fn delete_folder(file_path: &str) -> String {
 }
 
 fn download_git(url: &str, folder_path: &str) -> String {
-    // let _ = Command::new("git")
-    //     .args(&["clone", file_path, args])
-    //     .output()
-    //     .expect("Failed to execute command");
-
-    git2::Repository::clone(url,folder_path).unwrap();
+    git2::Repository::clone(url, folder_path).unwrap();
 
     format!("git {url} downloaded and saved to {folder_path} ")
 }
@@ -275,36 +282,3 @@ fn run_blueprint(file_path: &str, args: &str) -> String {
 
     result.unwrap_or("error in temple".to_string())
 }
-
-// pub fn render_with(
-//     text: String,
-//     select: Regex,
-//     renderer: fn(&str, &&str) -> String,
-//     split_type: RenderType,
-// ) -> String {
-//     let mut target_text = text.clone();
-//     for selected in select
-//         .captures_iter(target_text.clone().as_str())
-//         .map(|c| c.unwrap())
-//     {
-//         let found = selected.get(0).unwrap().as_str();
-//         let command = &selected.get(1).unwrap().as_str();
-//         let include_text: String;
-//         match split_type {
-//             RenderType::Complex => {
-//                 let sep = command.split(";").collect::<Vec<&str>>();
-//                 let file_name = sep[0];
-//                 let mut args = "";
-//                 if sep.len() > 1 {
-//                     args = sep[1];
-//                 }
-//                 include_text = renderer(file_name, &args);
-//             }
-//             RenderType::Simple => {
-//                 include_text = renderer(found, &command);
-//             }
-//         }
-//         target_text = target_text.replace(found, &include_text);
-//     }
-//     target_text
-// }
