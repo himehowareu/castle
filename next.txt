@@ -1,0 +1,5 @@
+compare or test command 
+
+map function .... like run this function over a dir
+
+ifs ?
