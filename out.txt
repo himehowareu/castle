@@ -1,0 +1,151 @@
+<body>
+    an include tag will dump the content of a file here :
+    # castle 
+
+fsdfasd
+    a setting tag will pull a vllarible from a json
+    < setting> filename:var name
+        "fire"
+        a base64 tage dumps a base64 of the file
+        aW1wb3J0IHJlCmltcG9ydCBqc29uCmltcG9ydCBiYXNlNjQKaW1wb3J0IHN1YnByb2Nlc3MKCnRhcmdldCA9ICJub3Rlcy5odG1sIgpzZXR0aW5nc19maWxlID0gInNldHRpbmdzLmpzb24iCm91dCA9ICJvdXQuanMiCgoKaW5jbHVkZXMgPSByZS5jb21waWxlKHInPGluY2x1ZGU+KC4qKTwvaW5jbHVkZT4nKQpzZXR0aW5ncyA9IHJlLmNvbXBpbGUocic8c2V0dGluZz4oLiopPC9zZXR0aW5nPicpCmJhc2U2NHMgPSByZS5jb21waWxlKHInPGJhc2U2ND4oLiopPC9iYXNlNjQ+JykKc3lzdGVtcyA9IHJlLmNvbXBpbGUocic8c3lzdGVtPiguKik8L3N5c3RlbScpCgpkZWYgbWluaWZ5KHRleHQ6c3RyKS0+c3RyOgogICAgcmV0dXJuIHRleHQucmVwbGFjZSgiXG4iLCIiKS5yZXBsYWNlKCJcJyIsIlwiIikKCmRlZiByZW5kZXIodGFyZ2V0OnN0cixmaWxlczpsaXN0W3N0cl09W10pIC0+c3RyIDoKICAgIHdpdGggb3Blbih0YXJnZXQsInIiKSBhcyBmX3RhcmdldDoKICAgICAgICB0YXJnZXRfdGV4dCA9IGZfdGFyZ2V0LnJlYWQoKQogICAgICAgIGZvciBpbmNsdWRlIGluIHJlLmZpbmRhbGwoaW5jbHVkZXMsdGFyZ2V0X3RleHQpOgogICAgICAgICAgICBpZiBpbmNsdWRlIGluIGZpbGVzOgogICAgICAgICAgICAgICAgZXhpdChmIndoaWxlIHJlbmRlcmluZyB7dGFyZ2V0fSBmb3VuZCByZWN1cnNpdmUgaW5jbHVkZSB7aW5jbHVkZX0iKQogICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgaW5jbHVkZV90ZXh0ID0gbWluaWZ5KHJlbmRlcihpbmNsdWRlLGZpbGVzICsgW3RhcmdldF0pKSAgICAKICAgICAgICAgICAgICAgIHRhcmdldF90ZXh0ID0gdGFyZ2V0X3RleHQucmVwbGFjZShmIjxpbmNsdWRlPntpbmNsdWRlfTwvaW5jbHVkZT4iLGluY2x1ZGVfdGV4dCkKICAgICAgICBmb3Igc2V0dGluZyBpbiByZS5maW5kYWxsKHNldHRpbmdzLHRhcmdldF90ZXh0KToKICAgICAgICAgICAgZixuID0gc2V0dGluZy5zcGxpdCgiOiIpCiAgICAgICAgICAgIHMgPSBqc29uLmxvYWQob3BlbihmKyIuanNvbiIsInIiKSkKICAgICAgICAgICAgdGFyZ2V0X3RleHQgPSB0YXJnZXRfdGV4dC5yZXBsYWNlKGYiPHNldHRpbmc+e3NldHRpbmd9PC9zZXR0aW5nPiIsc1tuXSkKICAgICAgICBmb3IgYjY0IGluIHJlLmZpbmRhbGwoYmFzZTY0cyx0YXJnZXRfdGV4dCk6CiAgICAgICAgICAgIHdpdGggb3BlbihiNjQsICJyYiIpIGFzIGlfZmlsZToKICAgICAgICAgICAgICAgIGVuY29kZWRfc3RyaW5nID0gYmFzZTY0LmI2NGVuY29kZShpX2ZpbGUucmVhZCgpKS5kZWNvZGUoJ3V0Zi04JykKICAgICAgICAgICAgICAgIHRhcmdldF90ZXh0ID0gdGFyZ2V0X3RleHQucmVwbGFjZShmIjxiYXNlNjQ+e2I2NH08L2Jhc2U2ND4iLGVuY29kZWRfc3RyaW5nKQogICAgICAgIGZvciBzeXN0ZW0gaW4gcmUuZmluZGFsbChzeXN0ZW1zLHRhcmdldF90ZXh0KToKICAgICAgICAgICAgcmVzdWx0ID0gc3VicHJvY2Vzcy5ydW4oc3lzdGVtLnNwbGl0KCIgIiksIHN0ZG91dD1zdWJwcm9jZXNzLlBJUEUpLnN0ZG91dC5kZWNvZGUoJ3V0Zi04JykKICAgICAgICAgICAgdGFyZ2V0X3RleHQgPSB0YXJnZXRfdGV4dC5yZXBsYWNlKGYiPHN5c3RlbT57c3lzdGVtfTwvc3lzdGVtPiIscmVzdWx0KQogICAgICAgIAogICAgICAgIHJldHVybiB0YXJnZXRfdGV4dAoKCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6ICAgIAogICAgcHJpbnQocmVuZGVyKHRhcmdldCkpCg==
+        system tag dumps the output of a system command
+        Python 3.12.3
+        Linux BigRed 6.8.0-60-generic #63-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 15 19:04:15 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+        this next line shor
+        error with command
+        a macro tag with run a lua script file with arguments
+         these are args 234234 hi
+        a macro tag with run a lua script file
+         hi
+        a lua tag runs lua code
+        3
+        "test"
+        a blueprint tag import a tera template simular to Jinja
+        hello john!
+
+and a string
+
+this is a test
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+
+red
+        https://github.com/Keats/tera/tree/master?tab=readme-ov-file
+</body>
+
+# import string 
+
+# strings radix=d file
+
+def get_Strings(name,exclude=False):
+    output=[]
+    file = open(name,"rb").read()
+    pc = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 123, 124, 125, 126, 32, 9, 10, 13, 11, 12]
+    # this xcan be used if you dont mind importing a lib
+    # pc = list(map(ord,string.printable))
+    out=""
+    start=0
+    last=0
+    for index,char in enumerate(list(file)):
+        if char in pc:
+            if last+1!=index:
+                if len(out)>4:
+                    if exclude:
+                        output.append((start,start+len(out)))
+                    else:
+                        output.append((start,start+len(out),repr(out)))
+                out=chr(char)
+                start=index
+            else:
+                out+=chr(char)
+            last=index
+    return output
+
+if __name__ == "__main__":
+    from pprint import pprint
+    pprint(get_Strings("out.bin"))
+
+# import string # strings radix=d filedef get_Strings(name,exclude=False):    output=[]    file = open(name,"rb").read()    pc = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 123, 124, 125, 126, 32, 9, 10, 13, 11, 12]    # this xcan be used if you dont mind importing a lib    # pc = list(map(ord,string.printable))    out=""    start=0    last=0    for index,char in enumerate(list(file)):        if char in pc:            if last+1!=index:                if len(out)>4:                    if exclude:                        output.append((start,start+len(out)))                    else:                        output.append((start,start+len(out),repr(out)))                out=chr(char)                start=index            else:                out+=chr(char)            last=index    return outputif __name__ == "__main__":    from pprint import pprint    pprint(get_Strings("out.bin"))
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+watcher.py
+Downloaded watcher.py
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+deleted file watcher.py
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+
+git https://github.com/himehowareu/CVM.git downloaded and saved to cvm 
+1 2 3 4 5 6loop 1 stackSize GT dostringprintlnendLoop"what is your name? " printinput"welcome " print println"thinking.cvm" 4 loadFile" " 4 splitStack1 4 swapStackloop 1 stackSize GT doprintlnendLoop
+
+deleted folder cvm
+<test>hi</test>
+Cargo.lock  examples  out.txt	 src	 test.html
+Cargo.toml  next.txt  README.md  target
+hello
+
+weird....
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+test_out.txt
+
+rendered examples/working.html
+hello
+
+<system>ls</system>
+weird....
+{{ "hello " ~ name ~ `!` }}
+
+{{ "and a string" }}
+
+this is a test
+Cargo.lock
+Cargo.toml
+examples
+next.txt
+out.txt
+README.md
+src
+target
+test.html
+test_out.txt
+
+{{car}
+deleted file test_out.txt
+hello

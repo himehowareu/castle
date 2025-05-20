@@ -2,12 +2,15 @@ use base64::{engine::general_purpose, Engine as _};
 use fancy_regex::Regex;
 use mlua::Lua;
 use shell_words;
+use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
+use std::process::Command;
 use std::{
-    env,
+    // env,
     path::Path,
-    process::{exit, Command},
+    // process::{exit, Command},
+    process::exit,
 };
 use tera::Context;
 use tera::Tera;
@@ -23,11 +26,11 @@ pub enum RenderType {
 // }
 
 pub fn render(file_path: &str, files: Vec<&str>) -> String {
-    let mut target_text = try_read_file(file_path);
-    let tags = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
+    let mut target_text: String = try_read_file(file_path);
+    let tags: Regex = Regex::new(r"<(.*)>(.*)</\1>").unwrap();
     for tag in tags.captures_iter(&target_text.clone()).map(|c| c.unwrap()) {
-        let tag_target = tag.get(0).unwrap().as_str();
-        let tag_type = tag.get(1).unwrap().as_str();
+        let tag_target: &str = tag.get(0).unwrap().as_str();
+        let tag_type: &str = tag.get(1).unwrap().as_str();
         let tag_text: &str = tag.get(2).unwrap().as_str();
         let tag_value: String;
         // debug(format!("from : {file_path}"));
@@ -39,7 +42,7 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                     println!("while rendering {file_path} found recursive include {tag_text}");
                     std::process::exit(-1)
                 } else {
-                    let mut files2 = files.clone();
+                    let mut files2: Vec<&str> = files.clone();
                     files2.push(tag_text);
                     tag_value = render(tag_text, files2);
                 }
@@ -49,15 +52,15 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                     println!("while rendering {file_path} found recursive include {tag_text}");
                     std::process::exit(-1)
                 } else {
-                    let mut files2 = files.clone();
+                    let mut files2: Vec<&str> = files.clone();
                     files2.push(tag_text);
                     tag_value = minify(render(tag_text, files2));
                 }
             }
             "setting" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let file_name = sep[0];
-                let setting_name;
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name: &str = sep[0];
+                let setting_name: &str;
                 if sep.len() > 1 {
                     setting_name = sep[1];
                 } else {
@@ -75,8 +78,8 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                 tag_value = run_lua(tag_text);
             }
             "macro" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let file_name = sep[0];
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name: &str = sep[0];
                 let mut args = "";
                 if sep.len() > 1 {
                     args = sep[1];
@@ -84,8 +87,8 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                 tag_value = run_macro(file_name, args);
             }
             "blueprint" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let file_name = sep[0];
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let file_name: &str = sep[0];
                 let mut args = "";
                 if sep.len() > 1 {
                     args = sep[1];
@@ -99,15 +102,15 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                 tag_value = minify(get_file(tag_text));
             }
             "download" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let url = sep[0];
-                let file_path = sep[1];
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let url: &str = sep[0];
+                let file_path: &str = sep[1];
                 tag_value = download_file(url, file_path);
             }
             "git" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let url = sep[0];
-                let file_path = sep[1];
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let url: &str = sep[0];
+                let file_path: &str = sep[1];
                 tag_value = download_git(url, file_path);
             }
             "delete" => {
@@ -117,16 +120,16 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
                 tag_value = delete_folder(tag_text);
             }
             "render" => {
-                let sep = tag_text.split(";").collect::<Vec<&str>>();
-                let target_file = sep[0];
-                let out_file = sep[1];
+                let sep: Vec<&str> = tag_text.split(";").collect::<Vec<&str>>();
+                let target_file: &str = sep[0];
+                let out_file: &str = sep[1];
 
                 if files.contains(&target_file) {
                     println!("while rendering {file_path} found recursive include {target_file}");
                     std::process::exit(-1)
                 } else {
-                    let mut file = File::create(out_file).unwrap();
-                    let text = render(target_file, [target_file, file_path].to_vec());
+                    let mut file: File = File::create(out_file).unwrap();
+                    let text: String = render(target_file, [target_file, file_path].to_vec());
                     let _ = file.write_all(text.as_bytes());
                 }
                 tag_value = format!("rendered {target_file}")
@@ -150,21 +153,21 @@ pub fn render(file_path: &str, files: Vec<&str>) -> String {
 }
 
 fn run_command(command: &str) -> String {
-    let a = shell_words::split(command);
-    let mut b = a.unwrap();
-    let mut out;
+    let a: Result<Vec<String>, shell_words::ParseError> = shell_words::split(command);
+    let mut b: Vec<String> = a.unwrap();
+    let mut out: String;
     if env::consts::OS == "windows" {
-        let e = Command::new("cmd")
+        let e: std::process::Output = Command::new("cmd")
             .args(["/c", "echo", "error with command"])
             .output()
             .unwrap();
-        let output = Command::new("cmd").arg("/c").args(b).output().unwrap_or(e);
+        let output: std::process::Output = Command::new("cmd").arg("/c").args(b).output().unwrap_or(e);
         out = String::from_utf8_lossy(&output.stdout).to_string();
         if out.len() < 1 {
             out = String::from_utf8_lossy(&output.stderr).to_string();
         }
     } else {
-        let e = Command::new("echo")
+        let e: std::process::Output = Command::new("echo")
             .arg("error with command")
             .output()
             .unwrap();
@@ -178,13 +181,13 @@ fn run_command(command: &str) -> String {
 }
 
 fn rem_last(value: String) -> String {
-    let mut chars = value.chars();
+    let mut chars: std::str::Chars<'_> = value.chars();
     chars.next_back();
     chars.as_str().to_string()
 }
 
 fn run_lua(code: &str) -> String {
-    let lua = Lua::new();
+    let lua: Lua = Lua::new();
     lua.load(code)
         .eval::<String>()
         .unwrap_or("lua code errored".to_string())
@@ -192,7 +195,7 @@ fn run_lua(code: &str) -> String {
 
 fn try_read_file(file_path: &str) -> String {
     if file_path.starts_with("-") {
-        let mut chars = file_path.chars();
+        let mut chars: std::str::Chars<'_> = file_path.chars();
         chars.next();
         return chars.as_str().to_string();
     }
@@ -200,17 +203,17 @@ fn try_read_file(file_path: &str) -> String {
         println!("target file {file_path} does not exist");
         exit(-1);
     } else {
-        let mut file = File::open(file_path).unwrap();
-        let mut code = String::new();
+        let mut file: File = File::open(file_path).unwrap();
+        let mut code: String = String::new();
         file.read_to_string(&mut code).unwrap();
         code
     }
 }
 
 fn run_macro(file_path: &str, args: &str) -> String {
-    let code = try_read_file(file_path);
+    let code: String = try_read_file(file_path);
 
-    let lua = Lua::new();
+    let lua: Lua = Lua::new();
     let globals = lua.globals();
     globals.set("args", args.to_string()).unwrap();
     lua.load(code).exec().unwrap();
@@ -220,17 +223,17 @@ fn run_macro(file_path: &str, args: &str) -> String {
 }
 
 fn get_json(settings_file: &str, setting: &str) -> String {
-    let content = try_read_file(settings_file);
+    let content: String = try_read_file(settings_file);
 
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
-    let first_name = json.get(setting).unwrap();
+    let first_name: &tera::Value = json.get(setting).unwrap();
 
     first_name.to_string()
 }
 
 fn file_to_base64(file_path: &str) -> String {
-    let contents = try_read_file(file_path);
-    let encoded = general_purpose::STANDARD.encode(contents);
+    let contents: String = try_read_file(file_path);
+    let encoded: String = general_purpose::STANDARD.encode(contents);
     encoded
 }
 
@@ -240,15 +243,15 @@ fn minify(test: String) -> String {
 }
 
 fn download_file(url: &str, file_path: &str) -> String {
-    let resp = reqwest::blocking::get(url).expect("request failed");
+    let resp: reqwest::blocking::Response = reqwest::blocking::get(url).expect("request failed");
     let body = resp.bytes().expect("body invalid");
     let _ = std::fs::write(file_path, &body);
     format!("Downloaded {file_path}")
 }
 
 fn get_file(url: &str) -> String {
-    let resp = reqwest::blocking::get(url.to_string()).expect("request failed");
-    let body = resp.text().expect("body invalid");
+    let resp: reqwest::blocking::Response = reqwest::blocking::get(url.to_string()).expect("request failed");
+    let body: String = resp.text().expect("body invalid");
     body
 }
 
@@ -269,15 +272,15 @@ fn download_git(url: &str, folder_path: &str) -> String {
 }
 
 fn run_blueprint(file_path: &str, args: &str) -> String {
-    let contents = try_read_file(file_path);
+    let contents: String = try_read_file(file_path);
 
-    let mut context = Context::new();
+    let mut context: Context = Context::new();
     for arg in shell_words::split(args).unwrap() {
-        let sep = arg.split("=").collect::<Vec<&str>>();
+        let sep: Vec<&str> = arg.split("=").collect::<Vec<&str>>();
         context.insert(sep[0], sep[1])
     }
 
-    let result = Tera::one_off(contents.as_str(), &context, true);
+    let result: Result<String, tera::Error> = Tera::one_off(contents.as_str(), &context, true);
 
     result.unwrap_or("error in temple".to_string())
 }

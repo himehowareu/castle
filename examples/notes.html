@@ -1,7 +1,7 @@
 <body>
     an include tag will dump the content of a file here :
     <include>examples/README.md</include>
-    a setting tag will pu a vllarible from a json
+    a setting tag will pull a vllarible from a json
     < setting> filename:var name
         <setting>examples/plugin.json;buttonCode</setting>
         a base64 tage dumps a base64 of the file
@@ -42,10 +42,11 @@
 <system>echo weird....</system>
 <system>ls</system>
 
-<render>examples/working.html;out.txt</render>
+<render>examples/working.html;test_out.txt</render>
 <lua>"hello"</lua>
 
 <system>ls</system>
 <system>echo weird....</system>
-<delete>out.txt</delete>
+<system>cat test_out.txt</system>
+<delete>test_out.txt</delete>
 <lua>"hello"</lua>

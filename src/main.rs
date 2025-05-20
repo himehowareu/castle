@@ -15,14 +15,14 @@ struct Args {
     pub output: Option<String>,
 }
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse();
 
-    let file_out = args.output.unwrap_or("out.txt".into());
-    let text = render(args.path.as_str(), [].to_vec());
+    let file_out: String = args.output.unwrap_or("out.txt".into());
+    let text: String = render(args.path.as_str(), [].to_vec());
     if file_out == "-" {
         println!("{}", text);
     } else {
-        let mut file = File::create(file_out).unwrap();
+        let mut file: File = File::create(file_out).unwrap();
 
         let _ = file.write_all(text.as_bytes());
     }
