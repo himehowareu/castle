@@ -6,6 +6,7 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::process::Command;
+// use std::str::FromStr;
 use std::{
     // env,
     path::Path,
@@ -192,6 +193,7 @@ fn run_lua(code: &str) -> String {
         .eval::<String>()
         .unwrap_or("lua code errored".to_string())
 }
+
 
 fn try_read_file(file_path: &str) -> String {
     if file_path.starts_with("-") {

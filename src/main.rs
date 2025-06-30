@@ -15,7 +15,8 @@ struct Args {
     pub output: Option<String>,
 }
 fn main() {
-    let args: Args = Args::parse();
+    let args: Args
+     = Args::parse();
 
     let file_out: String = args.output.unwrap_or("out.txt".into());
     let text: String = render(args.path.as_str(), [].to_vec());
